@@ -1,0 +1,24 @@
+- hosts: localhost
+  tasks:
+  - name: Executing the Query for Response time
+    shell: /etc/ansible/notify_alerts/tasks/notify_about_res_time.sh
+    register: res_times
+  - debug: msg="{{ res_times.stdout_lines}}"
+  - debug: msg="{{ res_times.stdout.split('\n')[1] }}"
+#  - debug: msg="{{ res_times.stdout_lines.split('\n')[1] }}"
+#  - debug: msg="{{ res_times.stdout.split('\n')[0]}}"
+  - name: Sending an e-mail using SMTP servers
+    mail:
+      host: <SMTP>.amazonaws.com
+      port: 587
+      username: <USERNAME
+      password: <PASSWORD>
+      from: <YOUR SMTP DoMAIN MAIL>
+      to: <To yourMAIL>
+      subject: Monitoring Alert:High Response Times for ERP FTP API calls
+      subtype: html
+      body: '{{ lookup("template", "templates/mail_body.html.j2") }}'
+    when: res_times.stdout.split('\n')[1] | int > 150
+#   delegate_to: localhost
+    run_once: True
+

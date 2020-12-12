@@ -1,0 +1,20 @@
+- hosts: localhost
+  tasks:
+  - name: Executing the Query For Bgjobs
+    shell: /etc/ansible/notify_alerts/tasks/notify_about_bgjobs_active.sh
+    register: active_bgjobs
+  - debug: msg="{{ active_bgjobs.stdout_lines }}"
+  - debug: msg="{{ active_bgjobs.stdout.split('\n')[1]}}"
+  - name: Sending an e-mail using SMTP servers
+    mail:
+      host: <SMTP>.amazonaws.com
+      port: 587
+      username: <USERNAME
+      password: <PASSWORD>
+      from: <YOUR SMTP DoMAIN MAIL>
+      to: <To yourMAIL>
+      subject: Monitoring Alert:BG Jobs are In Active
+      subtype: html
+      body: '{{ lookup("template", "templates/bg_active_bgjobs.html.j2") }}'
+    when: active_bgjobs.stdout.split('\n')[1] | int >5
+    delegate_to: localhost

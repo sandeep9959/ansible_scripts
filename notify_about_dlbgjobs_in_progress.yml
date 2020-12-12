@@ -1,0 +1,20 @@
+- hosts: localhost
+  tasks:
+  - name: Executing the Query For Bgjobs
+    shell: /etc/ansible/notify_alerts/tasks/notify_about_dlbgjobs_in_progress.sh
+    register: dl_in_prog_jobs
+  - debug: msg="{{ dl_in_prog_jobs.stdout_lines }}"  
+  - debug: msg="{{ dl_in_prog_jobs.stdout.split('\n')[1]}}"
+  - name: Sending an e-mail using SMTP servers
+    mail:
+      host: <SMTP>.amazonaws.com
+      port: 587
+      username: <USERNAME
+      password: <PASSWORD>
+      from: <YOUR SMTP DoMAIN MAIL>
+      to: <To yourMAIL>
+      subject: Monitoring Alert:DL Data Load jobs are In Progress
+      subtype: html
+      body: '{{ lookup("template", "templates/mail_dl_bgjobs_in_progress.html.j2") }}'
+    when: dl_in_prog_jobs.stdout.split('\n')[1] | int >5
+    delegate_to: localhost
